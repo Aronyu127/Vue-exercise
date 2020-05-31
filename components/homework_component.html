@@ -135,21 +135,8 @@
   <div>
     <h4>關注城市</h4>
     <div class="card-columns">
-      <div class="card status-aqi2">
-        <div class="card-header">苗栗縣 - 三義
-          <a href="#" class="float-right"><i class="fas fa-star"></i></a>
-        </div>
-        <div class="card-body">
-          <ul class="list-unstyled">
-            <li>AQI 指數: 54</li>
-            <li>PM2.5: 8</li>
-            <li>說明: 普通</li>
-          </ul>
-          2018-05-20 16:00
-        </div>
-      </div>
       <template v-for='data in stared'>
-        <city-card :data='data' @stare='addToStared(data)'>
+        <city-card :data='data' @stare='toggleStared(data)'>
           <i slot='starIcon' class='fas fa-star'></i>
         </city-card>
       </template>
@@ -158,21 +145,8 @@
   
   <hr>
   <div class="card-columns">
-    <div class="card status-aqi2">
-      <div class="card-header">苗栗縣 - 三義
-        <a href="#" class="float-right"><i class="far fa-star"></i></a>
-      </div>
-      <div class="card-body">
-        <ul class="list-unstyled">
-          <li>AQI 指數: 54</li>
-          <li>PM2.5: 8</li>
-          <li>說明: 普通</li>
-        </ul>
-      2018-05-20 16:00
-      </div>
-    </div>
     <template v-for='data in filterData'>
-      <city-card :data='data' @stare='addToStared(data)'>
+      <city-card :data='data' @stare='toggleStared(data)'>
       </city-card>
     </template>
   </div>
@@ -204,28 +178,25 @@ Vue.component('city-card', {
   props: ['data'],
   template: '#cityCard',
   methods: {
-    aqiToStatus(aqi){
-      if(aqi <= 50){
-        return { text: '良好', cssClass: null }
-      }else if(aqi <= 100){
-        return { text: '普通', cssClass: 'status-aqi2' }
-      }else if(aqi <= 150){
-        return { text: '對敏感族群不健康', cssClass: 'status-aqi3' }
-      }else if(aqi <= 200){
-        return { text: '對所有族群不健康', cssClass: 'status-aqi4' }
-      }else if(aqi <= 300){
-        return { text: '非常不健康', cssClass: 'status-aqi5' }
-      }else{
-        return { text: '危害', cssClass: 'status-aqi6' }
-      }
-    },
     addStated(data){
       this.$emit('stare', this.data)
     }
   },
   computed: {
     statusObject: function(){
-      return this.aqiToStatus(this.data.AQI);
+      if(this.data.AQI <= 50){
+        return { text: '良好', cssClass: null }
+      }else if(this.data.AQI <= 100){
+        return { text: '普通', cssClass: 'status-aqi2' }
+      }else if(this.data.AQI <= 150){
+        return { text: '對敏感族群不健康', cssClass: 'status-aqi3' }
+      }else if(this.data.AQI <= 200){
+        return { text: '對所有族群不健康', cssClass: 'status-aqi4' }
+      }else if(this.data.AQI <= 300){
+        return { text: '非常不健康', cssClass: 'status-aqi5' }
+      }else{
+        return { text: '危害', cssClass: 'status-aqi6' }
+      }
     },
     statusText: function(){
       return this.statusObject.text
@@ -252,6 +223,7 @@ var app = new Vue({
   // 請在此撰寫 JavaScript
   created: function(){
     this.getData();
+    this.stared = JSON.parse(localStorage.getItem('staredCitys'));
   },
 
   methods: {
@@ -265,17 +237,15 @@ var app = new Vue({
         console.log(response)
       });
     },
-    addToStared(data){
+    toggleStared(data){
+      var index = this.stared.findIndex(d => d.SiteName == data.SiteName)
       if(this.stared.findIndex(d => d.SiteName == data.SiteName) == -1){
         this.stared.push(data)
-      }
-    },
-    RemoveToStared(data){
-      var index = this.stared.findIndex(d => d.SiteName == data.SiteName)
-      if(index != -1){
+      }else{
         this.stared.splice(index, 1)
       }
-    }
+      localStorage.setItem('staredCitys', JSON.stringify(this.stared));
+    },
   },
   computed: {
     uniqCounty: function(){
